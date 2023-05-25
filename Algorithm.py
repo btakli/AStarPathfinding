@@ -70,7 +70,7 @@ class Node:
     
     def __str__(self):
         '''Returns a string representation of the node'''
-        return f"(x:{self.center_coordinate[0]}, y:{self.center_coordinate[1]}, radius:{self.radius}, side:{self.side}, isGoal:{self.isGoal}, f:{self.f})"
+        return f"(x:{self.center_coordinate[0]:.4f}, y:{self.center_coordinate[1]}, radius:{self.radius:.4f}, side:{self.side}, isGoal:{self.isGoal}, f:{self.f:.4f})"
     
     def getPathFromRoot(self) -> list['Node']:
         '''Returns the path from the root node to the current node'''
