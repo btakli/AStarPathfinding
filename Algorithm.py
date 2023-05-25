@@ -1,7 +1,7 @@
-import copy
 import math
 import random
 import time
+
 
 class Node:
     '''Node class to be used with A*. Contains a state, parent, and cost.

@@ -1,5 +1,7 @@
 import pygame
+
 import Algorithm
+
 
 def drawCircles(screen, circles: list[tuple[float, float, float]], path: list[Algorithm.Node] = []):
     '''Draws the circles on screen, given the list of circles.
