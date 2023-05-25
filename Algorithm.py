@@ -26,13 +26,6 @@ class Node:
         self.parent = parent
         self.children = []
         
-        # if parent is not None and len(parent.children) == 0:
-        #     parent.children.append(self)
-        #     if self.side == 'L':
-        #         parent.children.append(Node((self.center_coordinate[0],self.center_coordinate[1]),self.radius,'R',parent))
-        #     else:
-        #         parent.children.append(Node((self.center_coordinate[0],self.center_coordinate[1]),self.radius,'L',parent))
-        
         self.cost = self.__get_cost()
         self.heuristic = heuristic
         self.isGoal = isGoal
@@ -158,8 +151,6 @@ def generateChildren(node: Node, circles: list[tuple[float, float, float]]) -> N
                 node.children.append(Node((circles[i][0],circles[i][1]),circles[i][2],'R',node, heuristic=node.heuristic-1, isGoal=False))
                 break
     
-    
-
 
 def generateCircles(n = 10, coord_range = 250, radius_range = 15) -> list[tuple[float, float, float]]:
     '''Generate a list of n circles on screen, with random coordinates and radius
