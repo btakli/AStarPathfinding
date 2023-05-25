@@ -43,6 +43,10 @@ def main():
     drawCircles(screen, circles)
     
     nodes = Algorithm.createNodesListFromPoints(circles)
+    
+    print("Children of first node: ")
+    for child in nodes[0].children:
+        print(child)
         
     aStar = Algorithm.AStar(nodes)
     

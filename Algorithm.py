@@ -1,3 +1,4 @@
+import copy
 import math
 import random
 
@@ -71,7 +72,7 @@ class Node:
     
     def __str__(self):
         '''Returns a string representation of the node'''
-        return f"(x:{self.center_coordinate[0]}, y:{self.center_coordinate[1]}, radius:{self.radius}, side:{self.side}, isGoal:{self.isGoal})"
+        return f"(x:{self.center_coordinate[0]}, y:{self.center_coordinate[1]}, radius:{self.radius}, side:{self.side}, isGoal:{self.isGoal}, f:{self.f})"
     
     def getPathFromRoot(self) -> list['Node']:
         '''Returns the path from the root node to the current node'''
@@ -94,8 +95,15 @@ class AStar:
     def search(self):
         '''Performs the A* search algorithm'''
         self.open.append(self.nodes[0])
-        #self.open.append(self.nodes[1])
+        self.open.append(self.nodes[1])
         while len(self.open) > 0:
+            
+            self.open.sort(key=lambda node: node.f) # Sort the open list by f value, so that the lowest f value is at the front of the list
+            print("Open list: ")
+            for node in self.open:
+                print(node)
+            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+            
             current = self.open.pop(0)
             self.closed.append(current)
             
@@ -109,12 +117,8 @@ class AStar:
                     else:
                         if child.cost < current.cost:
                             child.parent = current
-                            self.open.sort(key=lambda x: x.f) # Sort the open list by f value, so that the lowest f value is at the front of the list
                             
-            print("Open list: ")
-            for node in self.open:
-                print(node)
-            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+
                             
                             
         return None
@@ -131,16 +135,31 @@ def createNodesListFromPoints(points: list[tuple[float, float, float]]):
             # Need to set the parents: Could've come from the left or right of the previous node
             nodes.append(Node((points[i][0],points[i][1]),points[i][2],'L',nodes[-2],True)) 
             nodes.append(Node((points[i][0],points[i][1]),points[i][2],'R',nodes[-2],True))
+            
+            # The previous L needs to be connected to the current R
+            right_child = copy.deepcopy(nodes[-1])
+            right_child.parent = nodes[-4]
+            nodes[-4].children.append(right_child)
+            
+            # The previous R needs to be connected to the current L
+            left_child = copy.deepcopy(nodes[-2])
+            left_child.parent = nodes[-3]
+            nodes[-3].children.append(left_child)
+            
         else:
             nodes.append(Node((points[i][0],points[i][1]),points[i][2],'L',nodes[-2]))
             nodes.append(Node((points[i][0],points[i][1]),points[i][2],'R',nodes[-2]))
             
+            # The previous L needs to be connected to the current R
+            right_child = copy.deepcopy(nodes[-1])
+            right_child.parent = nodes[-4]
+            nodes[-4].children.append(right_child)
             
-        
-            
-            
-        
-    
+            # The previous R needs to be connected to the current L
+            left_child = copy.deepcopy(nodes[-2])
+            left_child.parent = nodes[-3]
+            nodes[-3].children.append(left_child)
+
     for node in nodes:
         node.calculate_heuristic() # Calculate the heuristic for each node after all nodes have been created (we need to know the goal node and have all children created)
         node.f = node.cost + node.heuristic # Calculate the f value for each node
@@ -163,12 +182,3 @@ def generateCircles(n = 10, coord_range = 250, radius_range = 15) -> list[tuple[
         circles.append((x,y,radius))
         
     return circles
-
-
-        
-        
-    
-    
-        
-    
-    
