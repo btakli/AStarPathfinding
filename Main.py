@@ -38,17 +38,7 @@ def drawCircles(screen, circles: list[tuple[float, float, float]], path: list[Al
 def main():
     circles = Algorithm.generateCircles()
     
-    screen = pygame.display.set_mode((500,500))
-    
-    drawCircles(screen, circles)
-    
-    leftRoot, rightRoot = Algorithm.getRootNodes(circles)
-    
-    # print("Children of first node: ")
-    # for child in nodes[0].children:
-    #     print(child)
-        
-    # aStar = Algorithm.AStar(nodes)
+    leftRoot, rightRoot = Algorithm.getRootNodes(circles) # Roots starting from left side of first circle and right side of first circle
     
     aStarLeft = Algorithm.AStar(leftRoot, circles)
     aStarRight = Algorithm.AStar(rightRoot, circles)
@@ -63,8 +53,8 @@ def main():
     if rightPath is None:
         print("No right path found")
     
-    print(f"Left path cost: {aStarLeft.total_cost}")
-    print(f"Right path cost: {aStarRight.total_cost}")
+    print(f"Left path cost: {aStarLeft.total_cost} with runtime {aStarLeft.runtime:.4f} seconds")
+    print(f"Right path cost: {aStarRight.total_cost} with runtime {aStarRight.runtime:.4f} seconds")
     
     path = []
     if aStarLeft.total_cost < aStarRight.total_cost:
@@ -72,9 +62,14 @@ def main():
     else:
         path = rightPath
     
+    print("Path:")
     for node in path:
         print(node)
         
+    
+    # Draw the circles on screen
+    screen = pygame.display.set_mode((500,500))
+    pygame.display.set_caption("A* Algorithm")
     drawCircles(screen, circles, path)
     
     

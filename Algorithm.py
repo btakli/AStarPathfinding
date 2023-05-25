@@ -1,6 +1,7 @@
 import copy
 import math
 import random
+import time
 
 class Node:
     '''Node class to be used with A*. Contains a state, parent, and cost.
@@ -43,14 +44,6 @@ class Node:
             return 0
         else:
             return self.parent.cost + self.__distance(self.parent)
-        
-    def calculate_heuristic(self):
-        '''Calculates and sets the heuristic of the node: I.E how many circles away from the goal node we are (L/R is one point).'''
-        goal = self # Doesn't matter if L or R, since they are both the same distance from the goal
-        heuristic = 0
-        while not goal.isGoal:
-            self.heuristic += 1
-            goal = goal.children[0]
         
     def __distance(self, other: 'Node'):
         '''Returns the distance between the current node and the other node'''
@@ -101,10 +94,15 @@ class AStar:
         self.open = []
         self.closed = []
         self.total_cost = 0
+        self.runtime = 0 # Runtime in seconds
     
     def search(self):
         '''Performs the A* search algorithm'''
         self.open.append(self.root)
+        
+        # Start timer
+        start_time = time.perf_counter_ns()
+        
         while len(self.open) > 0:
             
             self.open.sort(key=lambda node: node.f) # Sort the open list by f value, so that the lowest f value is at the front of the list
@@ -112,8 +110,11 @@ class AStar:
             self.closed.append((current.center_coordinate[0],current.center_coordinate[1],current.radius,current.side))
             
             if current.isGoal:
-                print(f"Total cost: {current.cost}")
                 self.total_cost = current.cost
+                
+                end_time = time.perf_counter_ns()
+                self.runtime = (end_time - start_time) * 10**-9
+                
                 return current.getPathFromRoot()
             
             generateChildren(current, self.circles)
@@ -127,30 +128,12 @@ class AStar:
                     else:
                         if child.cost < current.cost:
                             child.parent = current
-      
-        return None
-    
-def createNodesListFromPoints(points: list[tuple[float, float, float]]):
-    '''Creates a list of nodes from the given list of points tuples (x,y,radius). Properly assigns parents and sides, as well as if the node is a goal.'''
-    nodes = []
-    
-    for i in range(len(points)):
-        if i == 0:
-            nodes.append(Node((points[i][0],points[i][1]),points[i][2],'L',None))
-            nodes.append(Node((points[i][0],points[i][1]),points[i][2],'R',None))
-        elif i == len(points)-1: # Last node is goal node
-            # Need to set the parents: Could've come from the left or right of the previous node
-            nodes.append(Node((points[i][0],points[i][1]),points[i][2],'L',nodes[-2],True)) 
-            nodes.append(Node((points[i][0],points[i][1]),points[i][2],'R',nodes[-2],True))
-        else:
-            nodes.append(Node((points[i][0],points[i][1]),points[i][2],'L',nodes[-2]))
-            nodes.append(Node((points[i][0],points[i][1]),points[i][2],'R',nodes[-2]))
-
-    for node in nodes:
-        node.calculate_heuristic() # Calculate the heuristic for each node after all nodes have been created (we need to know the goal node and have all children created)
-        node.f = node.cost + node.heuristic # Calculate the f value for each node
         
-    return nodes
+        end_time = time.perf_counter_ns()
+        self.runtime = (end_time - start_time) * 10**-9
+        
+        print("No path found! Returning None. This should NEVER happen...")
+        return None
 
 def getRootNodes(points: list[tuple[float, float, float]]) -> list[Node]:
     '''Returns the two root nodes based on the list of points'''
