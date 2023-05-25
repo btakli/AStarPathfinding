@@ -8,13 +8,14 @@ class Node:
     The node data contains the coordinate of the center of the circle, and side (L/R) of the circle we are on.
     i.e (x,y,L) or (x,y,R). The coordinate of L would in actuality be (x-radius,y) and R would be (x+radius,y).
     ''' 
-    def __init__(self, center_coordinate: tuple, radius: float, side: chr, parent: 'Node', isGoal: bool = False):
+    def __init__(self, center_coordinate: tuple, radius: float, side: str, parent: 'Node', heuristic: int = 0, isGoal: bool = False):
         '''Creates a new node with the given data. Determines the cost of the node based on the parent's cost and the distance between the parent and the current node.
         
         Arguments:
         - center_coordinate: tuple of the center coordinate of the circle
         - radius: the radius of the circle
         - parent: the parent node
+        - heuristic: the heuristic of the node (how many circles away from the goal node we are)
         - side: the side of the circle we are on
         - isGoal: whether the node is the goal node. Last node in the path (L/R) will be the goal node.
         '''
@@ -24,13 +25,17 @@ class Node:
         self.parent = parent
         self.children = []
         
-        if parent is not None:
-            parent.children.append(self)
+        # if parent is not None and len(parent.children) == 0:
+        #     parent.children.append(self)
+        #     if self.side == 'L':
+        #         parent.children.append(Node((self.center_coordinate[0],self.center_coordinate[1]),self.radius,'R',parent))
+        #     else:
+        #         parent.children.append(Node((self.center_coordinate[0],self.center_coordinate[1]),self.radius,'L',parent))
         
         self.cost = self.__get_cost()
-        self.heuristic = 0
+        self.heuristic = heuristic
         self.isGoal = isGoal
-        self.f = 0 # Initially set to 0, will be calculated later
+        self.f = self.heuristic + self.cost # Initially set to 0, will be calculated later
         
     def __get_cost(self):
         '''Returns the cost of the node'''
@@ -85,42 +90,44 @@ class Node:
                
 class AStar:
     '''A* algorithm to find the shortest path from the start node to a goal node'''
-    def __init__(self, nodes: list[Node]):
-        '''Creates a new A* object with the given list of nodes'''
-        self.nodes = nodes
+    def __init__(self, root: Node, circles: list[tuple[float, float, float]]):
+        '''Creates a new A* object with the given list of nodes
+        
+        Arguments:
+        - root: the root node
+        - circles: the list of circles (x,y,radius) to be used to generate the children of each node)'''
+        self.root = root
+        self.circles = circles
         self.open = []
         self.closed = []
-        self.visited = []
+        self.total_cost = 0
     
     def search(self):
         '''Performs the A* search algorithm'''
-        self.open.append(self.nodes[0])
-        self.open.append(self.nodes[1])
+        self.open.append(self.root)
         while len(self.open) > 0:
             
             self.open.sort(key=lambda node: node.f) # Sort the open list by f value, so that the lowest f value is at the front of the list
-            print("Open list: ")
-            for node in self.open:
-                print(node)
-            print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-            
             current = self.open.pop(0)
-            self.closed.append(current)
+            self.closed.append((current.center_coordinate[0],current.center_coordinate[1],current.radius,current.side))
             
             if current.isGoal:
+                print(f"Total cost: {current.cost}")
+                self.total_cost = current.cost
                 return current.getPathFromRoot()
             
+            generateChildren(current, self.circles)
+            
+            
             for child in current.children:
-                if child not in self.closed:
+                # Check if the child is in the closed list (i.e the tuple (x,y,radius,side) is in the closed list))
+                if (child.center_coordinate[0],child.center_coordinate[1],child.radius,child.side) not in self.closed:
                     if child not in self.open:
                         self.open.append(child)
                     else:
                         if child.cost < current.cost:
                             child.parent = current
-                            
-
-                            
-                            
+      
         return None
     
 def createNodesListFromPoints(points: list[tuple[float, float, float]]):
@@ -135,36 +142,41 @@ def createNodesListFromPoints(points: list[tuple[float, float, float]]):
             # Need to set the parents: Could've come from the left or right of the previous node
             nodes.append(Node((points[i][0],points[i][1]),points[i][2],'L',nodes[-2],True)) 
             nodes.append(Node((points[i][0],points[i][1]),points[i][2],'R',nodes[-2],True))
-            
-            # The previous L needs to be connected to the current R
-            right_child = copy.deepcopy(nodes[-1])
-            right_child.parent = nodes[-4]
-            nodes[-4].children.append(right_child)
-            
-            # The previous R needs to be connected to the current L
-            left_child = copy.deepcopy(nodes[-2])
-            left_child.parent = nodes[-3]
-            nodes[-3].children.append(left_child)
-            
         else:
             nodes.append(Node((points[i][0],points[i][1]),points[i][2],'L',nodes[-2]))
             nodes.append(Node((points[i][0],points[i][1]),points[i][2],'R',nodes[-2]))
-            
-            # The previous L needs to be connected to the current R
-            right_child = copy.deepcopy(nodes[-1])
-            right_child.parent = nodes[-4]
-            nodes[-4].children.append(right_child)
-            
-            # The previous R needs to be connected to the current L
-            left_child = copy.deepcopy(nodes[-2])
-            left_child.parent = nodes[-3]
-            nodes[-3].children.append(left_child)
 
     for node in nodes:
         node.calculate_heuristic() # Calculate the heuristic for each node after all nodes have been created (we need to know the goal node and have all children created)
         node.f = node.cost + node.heuristic # Calculate the f value for each node
         
     return nodes
+
+def getRootNodes(points: list[tuple[float, float, float]]) -> list[Node]:
+    '''Returns the two root nodes based on the list of points'''
+    nodes = []
+    nodes.append(Node((points[0][0],points[0][1]),points[0][2],'L',None, heuristic=len(points)-1)) # Left side of first circle
+    nodes.append(Node((points[0][0],points[0][1]),points[0][2],'R',None, heuristic=len(points)-1)) # Right side of first circle
+    
+    return nodes
+
+def generateChildren(node: Node, circles: list[tuple[float, float, float]]) -> None:
+    '''Generates the children for the given node, based on the list of circles. Children are only generated for circles with a higher y value than the current node, and only your direct child.'''
+
+    for i in range(len(circles)):
+        if circles[i][1] > node.center_coordinate[1]:
+            
+            if (i == len(circles) - 1): # Last circle is goal node
+                node.children.append(Node((circles[i][0],circles[i][1]),circles[i][2],'L',node, heuristic=node.heuristic-1, isGoal=True))
+                node.children.append(Node((circles[i][0],circles[i][1]),circles[i][2],'R',node, heuristic=node.heuristic-1, isGoal=True))
+                break
+            else:
+                node.children.append(Node((circles[i][0],circles[i][1]),circles[i][2],'L',node, heuristic=node.heuristic-1, isGoal=False))
+                node.children.append(Node((circles[i][0],circles[i][1]),circles[i][2],'R',node, heuristic=node.heuristic-1, isGoal=False))
+                break
+    
+    
+
 
 def generateCircles(n = 10, coord_range = 250, radius_range = 15) -> list[tuple[float, float, float]]:
     '''Generate a list of n circles on screen, with random coordinates and radius

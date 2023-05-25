@@ -42,15 +42,35 @@ def main():
     
     drawCircles(screen, circles)
     
-    nodes = Algorithm.createNodesListFromPoints(circles)
+    leftRoot, rightRoot = Algorithm.getRootNodes(circles)
     
-    print("Children of first node: ")
-    for child in nodes[0].children:
-        print(child)
+    # print("Children of first node: ")
+    # for child in nodes[0].children:
+    #     print(child)
         
-    aStar = Algorithm.AStar(nodes)
+    # aStar = Algorithm.AStar(nodes)
     
-    path = aStar.search()
+    aStarLeft = Algorithm.AStar(leftRoot, circles)
+    aStarRight = Algorithm.AStar(rightRoot, circles)
+    
+    leftPath = aStarLeft.search()
+    
+    if leftPath is None:
+        print("No left path found")
+        
+    rightPath = aStarRight.search()
+    
+    if rightPath is None:
+        print("No right path found")
+    
+    print(f"Left path cost: {aStarLeft.total_cost}")
+    print(f"Right path cost: {aStarRight.total_cost}")
+    
+    path = []
+    if aStarLeft.total_cost < aStarRight.total_cost:
+        path = leftPath
+    else:
+        path = rightPath
     
     for node in path:
         print(node)
