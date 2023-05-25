@@ -55,8 +55,8 @@ def main():
     if rightPath is None:
         print("No right path found")
     
-    print(f"Left path cost: {aStarLeft.total_cost} with runtime {aStarLeft.runtime:.4f} seconds")
-    print(f"Right path cost: {aStarRight.total_cost} with runtime {aStarRight.runtime:.4f} seconds")
+    print(f"Left path cost: {aStarLeft.total_cost:.4f} with runtime {aStarLeft.runtime:.4f} seconds")
+    print(f"Right path cost: {aStarRight.total_cost:.4f} with runtime {aStarRight.runtime:.4f} seconds")
     
     path = []
     if aStarLeft.total_cost < aStarRight.total_cost:
