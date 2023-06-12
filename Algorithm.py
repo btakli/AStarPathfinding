@@ -88,9 +88,14 @@ class AStar:
         self.closed = []
         self.total_cost = 0
         self.runtime = 0 # Runtime in seconds
+        
+        self.path = None # The path from the root node to the goal node, initially set to None and populated in the search method
     
-    def search(self):
-        '''Performs the A* search algorithm'''
+    def search(self) -> list['Node']:
+        '''Performs the A* search algorithm
+        
+        Returns: the path from the root node to the goal node.
+        - This can also be accessed by the path attribute of the A* object'''
         self.open.append(self.root)
         
         # Start timer
@@ -108,7 +113,9 @@ class AStar:
                 end_time = time.perf_counter_ns()
                 self.runtime = (end_time - start_time) * 10**-9
                 
-                return current.getPathFromRoot()
+                self.path = current.getPathFromRoot()
+                
+                return self.path
             
             generateChildren(current, self.circles)
             

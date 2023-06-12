@@ -1,3 +1,5 @@
+from threading import Thread
+import time
 import pygame
 import Algorithm
 
@@ -44,24 +46,38 @@ def main():
     aStarLeft = Algorithm.AStar(leftRoot, circles)
     aStarRight = Algorithm.AStar(rightRoot, circles)
     
-    leftPath = aStarLeft.search()
+    threadLeft = Thread(target=aStarLeft.search)
+    threadRight = Thread(target=aStarRight.search)
     
-    if leftPath is None:
+    # Start timer
+    start_time = time.perf_counter_ns()
+    
+    threadLeft.start()
+    threadRight.start()
+    
+    # Wait for the threads to finish
+    
+    threadLeft.join()
+    threadRight.join()
+    
+    # Start timer
+    end_time = time.perf_counter_ns()
+    if aStarLeft.path is None:
         print("No left path found")
-        
-    rightPath = aStarRight.search()
     
-    if rightPath is None:
+    if aStarRight.path is None:
         print("No right path found")
     
     print(f"Left path cost: {aStarLeft.total_cost:.4f} with runtime {aStarLeft.runtime:.4f} seconds")
     print(f"Right path cost: {aStarRight.total_cost:.4f} with runtime {aStarRight.runtime:.4f} seconds")
     
+    print(f"Total runtime: {(end_time - start_time) * 10**-9:.4f} seconds")
+    
     path = []
     if aStarLeft.total_cost < aStarRight.total_cost:
-        path = leftPath
+        path = aStarLeft.path
     else:
-        path = rightPath
+        path = aStarRight.path
     
     print("Path:")
     for node in path:
